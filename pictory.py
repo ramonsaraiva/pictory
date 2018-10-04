@@ -4,6 +4,7 @@ import re
 import shutil
 import sys
 from collections import defaultdict
+from typing import Callable
 
 import pendulum
 
@@ -20,16 +21,14 @@ files = {
     for _file in files
 }
 
-def _is_ext(_type):
-    def guess(_file):
+def _is_ext(_type) -> Callable:
+    def guess(_file) -> bool:
         g, _ = mimes.guess_type(_file)
         if not g:
             return False
         return g.startswith(_type)
     return guess
-
 is_img, is_video = _is_ext('image'), _is_ext('video')
-
 
 pictures = (_file for _file in files if is_img(_file))
 videos = (_file for _file in files if is_video(_file))
@@ -46,10 +45,12 @@ def structured_collection(collection) -> tuple:
 
         datetime = match.group(1)
         hour = match.group(3)
+        # ugly hour >= 24 hack
         if hour == '24':
             datetime = f'{datetime[:9]}00{datetime[11:15]}'
 
         clock = pendulum.from_format(datetime, 'YYYYMMDD_HHmmss')
+        # ugly hour >= 24 hack
         if hour == '24':
             clock = clock.add(days=1)
 
@@ -58,7 +59,7 @@ def structured_collection(collection) -> tuple:
     return (structured, unknowns)
 
 
-def copyerino(collection_name, structured_collection, unknowns):
+def copyerino(collection_name, structured_collection, unknowns) -> None:
     for year, months in structured_collection.items():
         for month, items in months.items():
             for source, destination in items:
