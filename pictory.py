@@ -4,22 +4,34 @@ import re
 import shutil
 import sys
 from collections import defaultdict
-from typing import Callable
+from typing import (
+    Callable,
+    Tuple,
+)
 
 import pendulum
 
-try:
-    path = sys.argv[1]
-except IndexError:
-    path = '.'
 
-base_output_path = os.path.join(path, __file__[:-3])
+def main():
+    try:
+        path = sys.argv[1]
+    except IndexError:
+        path = '.'
 
-files = {
-    os.path.join(root, _file)
-    for root, dirs, files in os.walk(path)
-    for _file in files
-}
+    base_output_path = os.path.join(path, __file__[:-3])
+
+    files = {
+        os.path.join(root, _file)
+        for root, dirs, files in os.walk(path)
+        for _file in files
+    }
+
+    pictures = (_file for _file in files if is_img(_file))
+    videos = (_file for _file in files if is_video(_file))
+
+    copyerino(base_output_path, 'images', *structured_collection(pictures))
+    copyerino(base_output_path, 'videos', *structured_collection(videos))
+
 
 def _is_ext(_type) -> Callable:
     def guess(_file) -> bool:
@@ -30,11 +42,8 @@ def _is_ext(_type) -> Callable:
     return guess
 is_img, is_video = _is_ext('image'), _is_ext('video')
 
-pictures = (_file for _file in files if is_img(_file))
-videos = (_file for _file in files if is_video(_file))
 
-
-def structured_collection(collection) -> tuple:
+def structured_collection(collection) -> Tuple[dict, set]:
     structured = defaultdict(lambda: defaultdict(list))
     unknowns = set()
     for item in collection:
@@ -54,32 +63,36 @@ def structured_collection(collection) -> tuple:
         if hour == '24':
             clock = clock.add(days=1)
 
-        year, month, stamp = clock.format('YYYY MMMM DD_HHmm').split()
-        structured[year][month].append((item, stamp))
+        year, month = clock.format('YYYY MMMM').split()
+        structured[year][month].append(item)
     return (structured, unknowns)
 
 
-def copyerino(collection_name, structured_collection, unknowns) -> None:
-    for year, months in structured_collection.items():
-        for month, items in months.items():
-            for source, destination in items:
-                source_ext = source.split('.')[-1]
-                path = os.path.join(
-                    base_output_path, collection_name, year, month)
+def copyerino(base_output_path, collection_name, collection, unknowns) -> None:
+    def files():
+        for year, months in collection.items():
+            for month, items in months.items():
+                for file_path in items:
+                    yield (year, month, file_path)
 
-                if not os.path.exists(path):
-                    os.makedirs(path)
-                shutil.copy(source, os.path.join(path, f'{destination}.{source_ext}'))
-    
-    if not unknowns:
-        return 
+    collection_output_path = os.path.join(
+        base_output_path, collection_name)
 
-    path = os.path.join(base_output_path, collection_name, 'unknowns')
-    if not os.path.exists(path):
-        os.makedirs(path)
-    for unknown in unknowns:
-        shutil.copy(unknown, path)
+    for year, month, file_path in files():
+        output_path = os.path.join(collection_output_path, year, month)
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        
+        output_file = os.path.basename(file_path)
+        shutil.copy(file_path, os.path.join(output_path, output_file))
+        
+    if unknowns:
+        unknowns_path = os.path.join(collection_output_path, 'unknowns')
+        if not os.path.exists(unknowns_path):
+            os.makedirs(path)
+        for unknown in unknowns:
+            shutil.copy(unknown, path)
 
 
-copyerino('images', *structured_collection(pictures))
-copyerino('videos', *structured_collection(videos))
+if __name__ == '__main__':
+    main()
