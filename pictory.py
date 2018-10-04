@@ -47,24 +47,14 @@ def structured_collection(collection) -> Tuple[dict, set]:
     structured = defaultdict(lambda: defaultdict(list))
     unknowns = set()
     for item in collection:
-        match = re.match(r'.*((19|20)\d{6}_(\d{2})\d{4}).*', item)
+        match = re.match(r'.*(((19|20)\d{6})_\d{6}).*', item)
         if not match:
             unknowns.add(item)
             continue
 
-        datetime = match.group(1)
-        hour = match.group(3)
-        # ugly hour >= 24 hack
-        if hour == '24':
-            datetime = f'{datetime[:9]}00{datetime[11:15]}'
-
-        clock = pendulum.from_format(datetime, 'YYYYMMDD_HHmmss')
-        # ugly hour >= 24 hack
-        if hour == '24':
-            clock = clock.add(days=1)
-
-        year, month = clock.format('YYYY MMMM').split()
-        structured[year][month].append(item)
+        clock = pendulum.from_format(match.group(2), 'YYYYMMDD')
+        year, written_month = clock.format('YYYY MMMM').split()
+        structured[year][written_month].append(item)
     return (structured, unknowns)
 
 
