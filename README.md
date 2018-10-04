@@ -1,5 +1,13 @@
 # pictory
 
+## Usage
+
+`python pictory.py <path>`
+
+`<path>` is optional.
+
+## End result
+
 from
 ```
 20130907_200910.jpg
