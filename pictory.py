@@ -7,13 +7,12 @@ from collections import defaultdict
 
 import pendulum
 
-
-BASE_OUTPUT_PATH = __file__[:-3]
-
 try:
     path = sys.argv[1]
 except IndexError:
     path = '.'
+
+base_output_path = os.path.join(path, __file__[:-3])
 
 files = {
     os.path.join(root, _file)
@@ -65,7 +64,7 @@ def copyerino(collection_name, structured_collection, unknowns):
             for source, destination in items:
                 source_ext = source.split('.')[-1]
                 path = os.path.join(
-                    BASE_OUTPUT_PATH, collection_name, year, month)
+                    base_output_path, collection_name, year, month)
 
                 if not os.path.exists(path):
                     os.makedirs(path)
@@ -74,7 +73,7 @@ def copyerino(collection_name, structured_collection, unknowns):
     if not unknowns:
         return 
 
-    path = os.path.join(BASE_OUTPUT_PATH, collection_name, 'unknowns')
+    path = os.path.join(base_output_path, collection_name, 'unknowns')
     if not os.path.exists(path):
         os.makedirs(path)
     for unknown in unknowns:
