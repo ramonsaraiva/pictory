@@ -21,8 +21,16 @@ files = {
     for _file in files
 }
 
-_is_ext = lambda _type: lambda _file: mimes.guess_type(_file)[0].startswith(_type)
+def _is_ext(_type):
+    def guess(_file):
+        g, _ = mimes.guess_type(_file)
+        if not g:
+            return False
+        return g.startswith(_type)
+    return guess
+
 is_img, is_video = _is_ext('image'), _is_ext('video')
+
 
 pictures = (_file for _file in files if is_img(_file))
 videos = (_file for _file in files if is_video(_file))
@@ -32,12 +40,21 @@ def structured_collection(collection) -> tuple:
     structured = defaultdict(lambda: defaultdict(list))
     unknowns = set()
     for item in collection:
-        match = re.match(r'.*((19|20)\d{6}_\d{6}).*', item)
+        match = re.match(r'.*((19|20)\d{6}_(\d{2})\d{4}).*', item)
         if not match:
             unknowns.add(item)
             continue
-        clock = pendulum.from_format(match.group(1), 'YYYYMMDD_HHmmss')
-        year, month, stamp  = clock.format('YYYY MMMM DD_HHmm').split()
+
+        datetime = match.group(1)
+        hour = match.group(3)
+        if hour == '24':
+            datetime = f'{datetime[:9]}00{datetime[11:15]}'
+
+        clock = pendulum.from_format(datetime, 'YYYYMMDD_HHmmss')
+        if hour == '24':
+            clock = clock.add(days=1)
+
+        year, month, stamp = clock.format('YYYY MMMM DD_HHmm').split()
         structured[year][month].append((item, stamp))
     return (structured, unknowns)
 
