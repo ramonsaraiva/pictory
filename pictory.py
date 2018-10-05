@@ -36,9 +36,7 @@ def main():
 def _is_ext(_type) -> Callable:
     def guess(_file) -> bool:
         g, _ = mimes.guess_type(_file)
-        if not g:
-            return False
-        return g.startswith(_type)
+        return g.startswith(_type) if g else False
     return guess
 is_img, is_video = _is_ext('image'), _is_ext('video')
 
