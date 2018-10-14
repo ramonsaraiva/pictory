@@ -2,3 +2,5 @@
 *.swp
 .python-version
 dist
+build
+*.egg-info
