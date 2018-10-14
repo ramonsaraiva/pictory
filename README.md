@@ -1,5 +1,21 @@
 # pictory
 
+Simple tool to organize pictures and videos in lickable directories
+
+## Installation
+
+Simply use `pip`
+
+```
+pip install pictory
+```
+
+or `pipenv`
+
+```
+pipenv install pictory
+```
+
 ## Usage
 
 `python pictory.py <path>`
