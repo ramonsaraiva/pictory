@@ -15,6 +15,7 @@ setup(
     url='https://github.com/ramonsaraiva/pictory',
     author='Ramon Saraiva',
     author_email='ramonsaraiva@gmail.com',
+    license='MIT',
     description='simple tool to organize pictures and videos in lickable directories',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
