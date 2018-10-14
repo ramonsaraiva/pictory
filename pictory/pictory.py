@@ -1,3 +1,4 @@
+from datetime import datetime
 import mimetypes as mimes
 import os
 import re
@@ -9,16 +10,15 @@ from typing import (
     Tuple,
 )
 
-import pendulum
-
-
 def main():
     try:
         path = sys.argv[1]
     except IndexError:
-        path = '.'
+        print(
+            'Please specify the path to recursively find pictures and videos')
+        exit()
 
-    base_output_path = os.path.join(path, __file__[:-3])
+    base_output_path = os.path.join(path, 'pictory')
 
     files = {
         os.path.join(root, _file)
@@ -50,8 +50,8 @@ def structured_collection(collection) -> Tuple[dict, set]:
             unknowns.add(item)
             continue
 
-        clock = pendulum.from_format(match.group(2), 'YYYYMMDD')
-        year, written_month = clock.format('YYYY MMMM').split()
+        date = datetime.strptime(match.group(2), '%Y%m%d')
+        year, written_month = date.strftime('%Y %B').split()
         structured[year][written_month].append(item)
     return (structured, unknowns)
 
@@ -70,10 +70,10 @@ def copyerino(base_output_path, collection_name, collection, unknowns) -> None:
         output_path = os.path.join(collection_output_path, year, month)
         if not os.path.exists(output_path):
             os.makedirs(output_path)
-        
+
         output_file = os.path.basename(file_path)
         shutil.copy(file_path, os.path.join(output_path, output_file))
-        
+
     if unknowns:
         unknowns_path = os.path.join(collection_output_path, 'unknowns')
         if not os.path.exists(unknowns_path):
