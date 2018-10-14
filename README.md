@@ -18,7 +18,7 @@ pipenv install pictory
 
 ## Usage
 
-`python pictory.py <path>`
+`pictory <path>`
 
 ## End result
 
