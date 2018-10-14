@@ -1,0 +1,4 @@
+*.py[cod]
+*.swp
+.python-version
+dist
