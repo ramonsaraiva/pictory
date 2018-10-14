@@ -6,7 +6,7 @@ setup(
     url='https://github.com/ramonsaraiva/pictory',
     author='Ramon Saraiva',
     author_email='ramonsaraiva@gmail.com',
-    description='simple tool to organize my pictures in lickable directories',
+    description='simple tool to organize pictures and videos in lickable directories',
     packages=find_packages(),
     install_requires=open('requirements.txt').read().split('\n')[:-1],
     entry_points={
