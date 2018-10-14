@@ -4,8 +4,6 @@
 
 `python pictory.py <path>`
 
-`<path>` is optional.
-
 ## End result
 
 from
