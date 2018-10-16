@@ -1,23 +1,43 @@
+import argparse
 from datetime import datetime
 import mimetypes as mimes
 import os
 import re
 import shutil
-import sys
 from collections import defaultdict
 from typing import (
     Callable,
     Tuple,
 )
 
-def main():
-    try:
-        path = sys.argv[1]
-    except IndexError:
-        print(
-            'Please specify the path to recursively find pictures and videos')
-        exit()
+count_int = 0
 
+
+def over_strategy(src, des_path, filename)-> None:
+    shutil.move(src, os.path.join(des_path, filename))
+
+
+def pref_strategy(src, des_path, filename)-> None:
+    global count_int
+    count_int += 1
+    new_filename = str(count_int) + '_' + filename
+    shutil.copy(src, os.path.join(des_path, new_filename))
+
+
+def suff_strategy(src, des_path, filename) -> None:
+    global count_int
+    count_int += 1
+    new_filename = filename.split('.')[0] + '_' + str(count_int) + '.' + filename.split('.')[1]
+    shutil.copy(src, os.path.join(des_path, new_filename))
+
+
+duplicates_strategies = {'skip': lambda: None,
+                         'over': over_strategy,
+                         'pref': pref_strategy,
+                         'suff': suff_strategy}
+
+
+def main(path, duplicate) -> None:
     base_output_path = os.path.join(path, 'pictory')
 
     files = {
@@ -29,8 +49,8 @@ def main():
     pictures = (_file for _file in files if is_img(_file))
     videos = (_file for _file in files if is_video(_file))
 
-    copyerino(base_output_path, 'images', *structured_collection(pictures))
-    copyerino(base_output_path, 'videos', *structured_collection(videos))
+    copyerino(base_output_path, 'images', duplicate, *structured_collection(pictures))
+    copyerino(base_output_path, 'videos', duplicate, *structured_collection(videos))
 
 
 def _is_ext(_type) -> Callable:
@@ -56,10 +76,13 @@ def structured_collection(collection) -> Tuple[dict, set]:
     return (structured, unknowns)
 
 
-def copyerino(base_output_path, collection_name, collection, unknowns) -> None:
+def copyerino(base_output_path, collection_name, duplicates, collection, unknowns) -> None:
     def files():
         for year, months in collection.items():
+            global count_int
+            count_int = 0
             for month, items in months.items():
+                count_int = 0
                 for file_path in items:
                     yield (year, month, file_path)
 
@@ -72,7 +95,10 @@ def copyerino(base_output_path, collection_name, collection, unknowns) -> None:
             os.makedirs(output_path)
 
         output_file = os.path.basename(file_path)
-        shutil.copy(file_path, os.path.join(output_path, output_file))
+        try:
+            shutil.copy(file_path, os.path.join(output_path, output_file))
+        except shutil.SameFileError:
+            duplicates_strategies[duplicates](file_path, output_path, output_file)
 
     if unknowns:
         unknowns_path = os.path.join(collection_output_path, 'unknowns')
@@ -83,4 +109,14 @@ def copyerino(base_output_path, collection_name, collection, unknowns) -> None:
 
 
 if __name__ == '__main__':
-    main()
+
+    parser = argparse.ArgumentParser(description='Simple tool to organize pictures and videos in lickable directories')
+    parser.add_argument('path', metavar='path', type=str,
+                        help='path of directory to organize')
+
+    parser.add_argument('--duplicates', metavar='duplicates', type=str, default='skip',
+                        choices=list(duplicates_strategies.keys()),
+                        help='action to take in case of collision: {}'.format(list(duplicates_strategies.keys())))
+
+    args = parser.parse_args()
+    main(args.path, args.duplicates)
