@@ -13,21 +13,21 @@ from typing import (
 count_int = 0
 
 
-def over_strategy(src, des_path, filename)-> None:
+def over_strategy(src, des_path, filename) -> None:
     shutil.move(src, os.path.join(des_path, filename))
 
 
-def pref_strategy(src, des_path, filename)-> None:
+def pref_strategy(src, des_path, filename) -> None:
     global count_int
     count_int += 1
-    new_filename = str(count_int) + '_' + filename
+    new_filename = "{}_{}".format(str(count_int), filename)
     shutil.copy(src, os.path.join(des_path, new_filename))
 
 
 def suff_strategy(src, des_path, filename) -> None:
     global count_int
     count_int += 1
-    new_filename = filename.split('.')[0] + '_' + str(count_int) + '.' + filename.split('.')[1]
+    new_filename =  "{}_{}.{}".format(filename.split('.')[0], str(count_int), filename.split('.')[1])
     shutil.copy(src, os.path.join(des_path, new_filename))
 
 
